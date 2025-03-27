@@ -9,7 +9,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Calculadora de Propinas")
-        self.geometry("800x600")
+        self.geometry("500x500")
         self.frames = {}
 
         for F in (SplashScreen, ComidaScreen, ServicioScreen, ResultadoScreen):
@@ -27,43 +27,52 @@ class SplashScreen(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.configure(bg='white')
-        tk.Label(self, text="Calculadora de Propinas", font=("Arial", 32), bg='white').pack(expand=True)
+        bg_img = Image.open("comida.png").resize((500, 500))
+        self.bg_img = ImageTk.PhotoImage(bg_img)
+        canvas = tk.Canvas(self, width=500, height=500)
+        canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
+        canvas.pack(fill="both", expand=True)
+        
+        label = tk.Label(self, text="Calculadora de Propinas", font=("Arial", 24), bg='white')
+        canvas.create_window(250, 150, window=label)
         self.after(2000, lambda: parent.show_frame(ComidaScreen))
 
 class StarRating(tk.Frame):
-    def __init__(self, parent, label_text, callback):
+    def __init__(self, parent, label_text, callback, bg_image):
         super().__init__(parent)
         self.rating = 0
         self.callback = callback
 
-        meanings = ["Pesimo", "Mediocre", "Regular", "Bueno", "Excelente"]
+        meanings = ["Pésimo", "Mediocre", "Regular", "Bueno", "Excelente"]
         self.stars = []
 
-        bg_img = Image.open("comida.png").resize((800, 600))
+        bg_img = Image.open(bg_image).resize((500, 500))
         self.bg_img = ImageTk.PhotoImage(bg_img)
-        canvas = tk.Canvas(self, width=800, height=600)
+        canvas = tk.Canvas(self, width=500, height=500)
         canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
         canvas.pack(fill="both", expand=True)
 
-        label = tk.Label(self, text=label_text, font=("Arial", 24), bg='#ffffff')
-        canvas.create_window(400, 50, window=label)
+        label = tk.Label(self, text=label_text, font=("Arial", 18), bg='#ffffff')
+        canvas.create_window(250, 50, window=label)
 
         for i in range(5):
-            star_label = tk.Label(self, text="☆", font=("Arial", 50), bg='#ffffff')
+            star_label = tk.Label(self, text="☆", font=("Arial", 40), bg='#ffffff')
             star_label.bind("<Button-1>", lambda e, idx=i: self.set_rating(idx + 1))
-            canvas.create_window(150 + i * 100, 200, window=star_label)
+            canvas.create_window(100 + i * 60, 200, window=star_label)
             self.stars.append(star_label)
 
-            meaning = tk.Label(self, text=meanings[i], font=("Arial", 12), bg='#ffffff')
-            canvas.create_window(150 + i * 100, 280, window=meaning)
+            meaning = tk.Label(self, text=meanings[i], font=("Arial", 10), bg='#ffffff')
+            canvas.create_window(100 + i * 60, 250, window=meaning)
 
-        self.next_btn = tk.Button(self, text="Siguiente", command=self.next_screen, state="disabled")
-        canvas.create_window(400, 350, window=self.next_btn)
+        self.next_btn = tk.Button(self, text="Siguiente", command=self.next_screen, state="disabled", 
+                                  bg="#FF5733", fg="white", font=("Arial", 12, "bold"), relief="raised", bd=5, 
+                                  padx=10, pady=5, borderwidth=4, highlightbackground="#FF4500")
+        canvas.create_window(250, 350, window=self.next_btn)
 
     def set_rating(self, rating):
         self.rating = rating
         for i, star_label in enumerate(self.stars):
-            star_label.config(text="★" if i < rating else "☆", fg="gold", bg="transparent")
+            star_label.config(text="★" if i < rating else "☆", fg="gold")
         self.next_btn.config(state="normal")
 
     def next_screen(self):
@@ -71,7 +80,7 @@ class StarRating(tk.Frame):
 
 class ComidaScreen(StarRating):
     def __init__(self, parent):
-        super().__init__(parent, "Evalúa la Comida", self.save_rating)
+        super().__init__(parent, "Evalúa la Comida", self.save_rating, "comida.png")
 
     def save_rating(self, rating):
         self.master.comida_rating = rating
@@ -79,7 +88,7 @@ class ComidaScreen(StarRating):
 
 class ServicioScreen(StarRating):
     def __init__(self, parent):
-        super().__init__(parent, "Evalúa el Servicio", self.save_rating)
+        super().__init__(parent, "Evalúa el Servicio", self.save_rating, "servicio.jpeg")
 
     def save_rating(self, rating):
         self.master.servicio_rating = rating
@@ -88,10 +97,19 @@ class ServicioScreen(StarRating):
 class ResultadoScreen(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.result_label = tk.Label(self, text="", font=("Arial", 24))
-        self.result_label.pack(pady=50)
-        tk.Button(self, text="Calcular Propina", command=self.calculate_tip).pack()
-
+        bg_img = Image.open("servicio.jpeg").resize((500, 500))
+        self.bg_img = ImageTk.PhotoImage(bg_img)
+        canvas = tk.Canvas(self, width=500, height=500)
+        canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
+        canvas.pack(fill="both", expand=True)
+        
+        self.result_label = tk.Label(self, text="", font=("Arial", 18), bg='white')
+        canvas.create_window(250, 100, window=self.result_label)
+        
+        btn = tk.Button(self, text="Calcular Propina", command=self.calculate_tip, 
+                        bg="#4CAF50", fg="white", font=("Arial", 12, "bold"), relief="raised", bd=5, 
+                        padx=10, pady=5, borderwidth=4, highlightbackground="#008000")
+        canvas.create_window(250, 300, window=btn)
     def calculate_tip(self):
         comida = self.master.comida_rating
         servicio = self.master.servicio_rating
@@ -99,51 +117,52 @@ class ResultadoScreen(tk.Frame):
         # Lógica difusa
         servicio_var = ctrl.Antecedent(np.arange(1, 5, 1), 'servicio')
         comida_var = ctrl.Antecedent(np.arange(1, 5, 1), 'comida')
-        propina = ctrl.Consequent(np.arange(0, 15, 1), 'propina')
+        propina = ctrl.Consequent(np.arange(0, 16, 1), 'propina', defuzzify_method='mom')
 
-        servicio_var.automf(3)
-        comida_var.automf(3)
+
+        servicio_var.automf(names=['pesimo', 'mediocre', 'regular', 'bueno', 'excelente'])
+        comida_var.automf(names=['pesimo', 'mediocre', 'regular', 'bueno', 'excelente'])
 
         #Rangos de propinas
         propina['Ausente'] = fuzz.trimf(propina.universe, [0, 0, 5])
         propina['Regular'] = fuzz.trimf(propina.universe, [0, 5, 10])
-        propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 15])
-        propina['Generosa'] = fuzz.trimf(propina.universe, [10, 15, 20])
+        propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 14])
+        propina['Generosa'] = fuzz.trimf(propina.universe, [14, 15, 15])
 
-        #Reglas
-        regla1 = ctrl.Rule(servicio_var['poor'] & comida_var['poor'], propina['Generosa'])
-        regla2 = ctrl.Rule(servicio_var['average'] & comida_var['average'], propina['Generosa'])
-        regla3 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Adecuada'])
-        regla4 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla5 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
+        reglas = [
+            ctrl.Rule(servicio_var['excelente'] & comida_var['excelente'], propina['Generosa']),
+            ctrl.Rule(servicio_var['excelente'] & comida_var['bueno'], propina['Generosa']),
+            ctrl.Rule(servicio_var['excelente'] & comida_var['regular'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['excelente'] & comida_var['mediocre'], propina['Regular']),
+            ctrl.Rule(servicio_var['excelente'] & comida_var['pesimo'], propina['Ausente']),
+            
+            ctrl.Rule(servicio_var['bueno'] & comida_var['excelente'], propina['Generosa']),
+            ctrl.Rule(servicio_var['bueno'] & comida_var['bueno'], propina['Generosa']),
+            ctrl.Rule(servicio_var['bueno'] & comida_var['regular'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['bueno'] & comida_var['mediocre'], propina['Regular']),
+            ctrl.Rule(servicio_var['bueno'] & comida_var['pesimo'], propina['Ausente']),
+            
+            ctrl.Rule(servicio_var['regular'] & comida_var['excelente'], propina['Generosa']),
+            ctrl.Rule(servicio_var['regular'] & comida_var['bueno'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['regular'] & comida_var['regular'], propina['Regular']),
+            ctrl.Rule(servicio_var['regular'] & comida_var['mediocre'], propina['Regular']),
+            ctrl.Rule(servicio_var['regular'] & comida_var['pesimo'], propina['Ausente']),
+            
+            ctrl.Rule(servicio_var['mediocre'] & comida_var['excelente'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['mediocre'] & comida_var['bueno'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['mediocre'] & comida_var['regular'], propina['Regular']),
+            ctrl.Rule(servicio_var['mediocre'] & comida_var['mediocre'], propina['Regular']),
+            ctrl.Rule(servicio_var['mediocre'] & comida_var['pesimo'], propina['Ausente']),
+            
+            ctrl.Rule(servicio_var['pesimo'] & comida_var['excelente'], propina['Adecuada']),
+            ctrl.Rule(servicio_var['pesimo'] & comida_var['bueno'], propina['Regular']),
+            ctrl.Rule(servicio_var['pesimo'] & comida_var['regular'], propina['Regular']),
+            ctrl.Rule(servicio_var['pesimo'] & comida_var['mediocre'], propina['Ausente']),
+            ctrl.Rule(servicio_var['pesimo'] & comida_var['pesimo'], propina['Ausente']),
+        ]
 
-        regla6 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Generosa'])
-        regla7 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Generosa'])
-        regla8 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Adecuada'])
-        regla9 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla10 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
 
-        regla11 = ctrl.Rule(servicio_var['poor'] & comida_var['poor'], propina['Generosa'])
-        regla12 = ctrl.Rule(servicio_var['average'] & comida_var['average'], propina['Adecuada'])
-        regla13 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla14 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla15 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
-
-        regla16 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Adecuada'])
-        regla17 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Adecuada'])
-        regla18 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla19 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla20 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
-
-        regla21 = ctrl.Rule(servicio_var['poor'] & comida_var['poor'], propina['Adecuada'])
-        regla22 = ctrl.Rule(servicio_var['average'] & comida_var['average'], propina['Regular'])
-        regla23 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Regular'])
-        regla24 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
-        regla25 = ctrl.Rule(servicio_var['good'] & comida_var['good'], propina['Ausente'])
-
-        sistema = ctrl.ControlSystem([regla1, regla2, regla3, regla4, regla5, regla6, regla7, regla8, regla9, regla10, regla11,
-                                      regla12, regla13, regla14, regla15, regla16, regla17, regla18, regla19, regla20, 
-                                       regla21, regla22, regla23, regla24, regla25 ])
+        sistema = ctrl.ControlSystem(reglas)
         sim = ctrl.ControlSystemSimulation(sistema)
 
         sim.input['servicio'] = servicio
