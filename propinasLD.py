@@ -115,19 +115,26 @@ class ResultadoScreen(tk.Frame):
         servicio = self.master.servicio_rating
 
         # Lógica difusa
-        servicio_var = ctrl.Antecedent(np.arange(1, 5, 1), 'servicio')
-        comida_var = ctrl.Antecedent(np.arange(1, 5, 1), 'comida')
-        propina = ctrl.Consequent(np.arange(0, 16, 1), 'propina', defuzzify_method='mom')
+        servicio_var = ctrl.Antecedent(np.arange(1, 6, 1), 'servicio') 
+        comida_var = ctrl.Antecedent(np.arange(1, 6, 1), 'comida')     
+        propina = ctrl.Consequent(np.arange(0, 16, 1), 'propina')
 
+        servicio_var['pesimo'] = fuzz.trimf(servicio_var.universe, [1, 1, 2])
+        servicio_var['mediocre'] = fuzz.trimf(servicio_var.universe, [1, 2, 3])
+        servicio_var['regular'] = fuzz.trimf(servicio_var.universe, [2, 3, 4])
+        servicio_var['bueno'] = fuzz.trimf(servicio_var.universe, [3, 4, 5])
+        servicio_var['excelente'] = fuzz.trimf(servicio_var.universe, [4, 5, 5]) 
 
-        servicio_var.automf(names=['pesimo', 'mediocre', 'regular', 'bueno', 'excelente'])
-        comida_var.automf(names=['pesimo', 'mediocre', 'regular', 'bueno', 'excelente'])
+        comida_var['pesimo'] = fuzz.trimf(comida_var.universe, [1, 1, 2])
+        comida_var['mediocre'] = fuzz.trimf(comida_var.universe, [1, 2, 3])
+        comida_var['regular'] = fuzz.trimf(comida_var.universe, [2, 3, 4])
+        comida_var['bueno'] = fuzz.trimf(comida_var.universe, [3, 4, 5])
+        comida_var['excelente'] = fuzz.trimf(comida_var.universe, [4, 5, 5])  
 
-        #Rangos de propinas
         propina['Ausente'] = fuzz.trimf(propina.universe, [0, 0, 5])
         propina['Regular'] = fuzz.trimf(propina.universe, [0, 5, 10])
-        propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 14])
-        propina['Generosa'] = fuzz.trimf(propina.universe, [14, 15, 15])
+        propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 15])  
+        propina['Generosa'] = fuzz.trapmf(propina.universe, [14, 15, 15, 15])  
 
         reglas = [
             ctrl.Rule(servicio_var['excelente'] & comida_var['excelente'], propina['Generosa']),
