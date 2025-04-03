@@ -8,14 +8,15 @@ from skfuzzy import control as ctrl
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Calculadora de Propinas")
-        self.geometry("500x500")
+        self.title('Calculadora de Propinas')
+        self.geometry('500x500')
+        ## self.eval('tk::PlaceWindow . center')
         self.frames = {}
 
         for F in (SplashScreen, ComidaScreen, ServicioScreen, ResultadoScreen):
             frame = F(self)
             self.frames[F] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+            frame.grid(row = 0, column = 0, sticky = 'nsew')
 
         self.show_frame(SplashScreen)
 
@@ -26,15 +27,15 @@ class App(tk.Tk):
 class SplashScreen(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.configure(bg='white')
-        bg_img = Image.open("comida.png").resize((500, 500))
+        self.configure(bg = 'white')
+        bg_img = Image.open('fondo.jpg').resize((500, 500))
         self.bg_img = ImageTk.PhotoImage(bg_img)
-        canvas = tk.Canvas(self, width=500, height=500)
-        canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
-        canvas.pack(fill="both", expand=True)
+        canvas = tk.Canvas(self, width = 500, height = 500)
+        canvas.create_image(0, 0, image = self.bg_img, anchor = 'nw')
+        canvas.pack(fill = 'both', expand = True)
         
-        label = tk.Label(self, text="Calculadora de Propinas", font=("Arial", 24), bg='white')
-        canvas.create_window(250, 150, window=label)
+        label = tk.Label(self, text = 'Calculadora de Propinas', font = ('Arial', 24))
+        canvas.create_window(250, 150, window = label)
         self.after(2000, lambda: parent.show_frame(ComidaScreen))
 
 class StarRating(tk.Frame):
@@ -43,44 +44,44 @@ class StarRating(tk.Frame):
         self.rating = 0
         self.callback = callback
 
-        meanings = ["Pésimo", "Mediocre", "Regular", "Bueno", "Excelente"]
+        meanings = ['Pésimo', 'Mediocre', 'Regular', 'Bueno', 'Excelente']
         self.stars = []
 
         bg_img = Image.open(bg_image).resize((500, 500))
         self.bg_img = ImageTk.PhotoImage(bg_img)
-        canvas = tk.Canvas(self, width=500, height=500)
-        canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
-        canvas.pack(fill="both", expand=True)
+        canvas = tk.Canvas(self, width = 500, height = 500)
+        canvas.create_image(0, 0, image = self.bg_img, anchor = 'nw')
+        canvas.pack(fill = 'both', expand = True)
 
-        label = tk.Label(self, text=label_text, font=("Arial", 18), bg='#ffffff')
-        canvas.create_window(250, 50, window=label)
+        label = tk.Label(self, text = label_text, font = ('Arial', 18))
+        canvas.create_window(250, 50, window = label)
 
         for i in range(5):
-            star_label = tk.Label(self, text="☆", font=("Arial", 40), bg='#ffffff')
-            star_label.bind("<Button-1>", lambda e, idx=i: self.set_rating(idx + 1))
-            canvas.create_window(100 + i * 60, 200, window=star_label)
+            star_label = tk.Label(self, text = '☆', font = ('Arial', 40))
+            star_label.bind('<Button-1>', lambda e, idx = i: self.set_rating(idx + 1))
+            canvas.create_window(100 + i * 60, 200, window = star_label)
             self.stars.append(star_label)
 
-            meaning = tk.Label(self, text=meanings[i], font=("Arial", 10), bg='#ffffff')
-            canvas.create_window(100 + i * 60, 250, window=meaning)
+            meaning = tk.Label(self, text = meanings[i], font = ('Arial', 10))
+            canvas.create_window(100 + i * 60, 250, window = meaning)
 
-        self.next_btn = tk.Button(self, text="Siguiente", command=self.next_screen, state="disabled", 
-                                  bg="#FF5733", fg="white", font=("Arial", 12, "bold"), relief="raised", bd=5, 
-                                  padx=10, pady=5, borderwidth=4, highlightbackground="#FF4500")
-        canvas.create_window(250, 350, window=self.next_btn)
+        self.next_btn = tk.Button(self, text = 'Aceptar', command = self.next_screen, state = 'disabled', 
+                                  bg = '#e74c3c', fg = '#f7f7f7', font = ('Arial', 12, 'bold'), relief = 'raised', bd = 5, 
+                                  padx = 10, pady = 5, borderwidth = 4, highlightbackground = '#ff4500')
+        canvas.create_window(250, 350, window = self.next_btn)
 
     def set_rating(self, rating):
         self.rating = rating
         for i, star_label in enumerate(self.stars):
-            star_label.config(text="★" if i < rating else "☆", fg="gold")
-        self.next_btn.config(state="normal")
+            star_label.config(text = '★' if i < rating else '☆', fg = '#f1c40f')
+        self.next_btn.config(state = 'normal')
 
     def next_screen(self):
         self.callback(self.rating)
 
 class ComidaScreen(StarRating):
     def __init__(self, parent):
-        super().__init__(parent, "Evalúa la Comida", self.save_rating, "comida.png")
+        super().__init__(parent, 'Evalúa la Comida', self.save_rating, 'fondo.jpg')
 
     def save_rating(self, rating):
         self.master.comida_rating = rating
@@ -88,7 +89,7 @@ class ComidaScreen(StarRating):
 
 class ServicioScreen(StarRating):
     def __init__(self, parent):
-        super().__init__(parent, "Evalúa el Servicio", self.save_rating, "servicio.jpeg")
+        super().__init__(parent, 'Evalúa el Servicio', self.save_rating, 'mesero.jpg')
 
     def save_rating(self, rating):
         self.master.servicio_rating = rating
@@ -97,19 +98,20 @@ class ServicioScreen(StarRating):
 class ResultadoScreen(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        bg_img = Image.open("servicio.jpeg").resize((500, 500))
+        bg_img = Image.open('mesero.jpg').resize((500, 500))
         self.bg_img = ImageTk.PhotoImage(bg_img)
-        canvas = tk.Canvas(self, width=500, height=500)
-        canvas.create_image(0, 0, image=self.bg_img, anchor="nw")
-        canvas.pack(fill="both", expand=True)
+        canvas = tk.Canvas(self, width = 500, height = 500)
+        canvas.create_image(0, 0, image = self.bg_img, anchor = 'nw')
+        canvas.pack(fill = 'both', expand = True)
         
-        self.result_label = tk.Label(self, text="", font=("Arial", 18), bg='white')
-        canvas.create_window(250, 100, window=self.result_label)
+        self.result_label = tk.Label(self, font = ('Arial', 18), bg = 'white')
+        canvas.create_window(250, 100, window = self.result_label)
         
-        btn = tk.Button(self, text="Calcular Propina", command=self.calculate_tip, 
-                        bg="#4CAF50", fg="white", font=("Arial", 12, "bold"), relief="raised", bd=5, 
-                        padx=10, pady=5, borderwidth=4, highlightbackground="#008000")
-        canvas.create_window(250, 300, window=btn)
+        btn = tk.Button(self, text = 'Calcular Propina', command = self.calculate_tip, 
+                        bg = '#27ae60', fg = '#f7f7f7', font = ('Arial', 12, 'bold'), relief = 'raised', bd = 5, 
+                        padx = 10, pady = 5, borderwidth = 4, highlightbackground = '#008000')
+        canvas.create_window(250, 300, window = btn)
+
     def calculate_tip(self):
         comida = self.master.comida_rating
         servicio = self.master.servicio_rating
@@ -168,7 +170,6 @@ class ResultadoScreen(tk.Frame):
             ctrl.Rule(servicio_var['pesimo'] & comida_var['pesimo'], propina['Ausente']),
         ]
 
-
         sistema = ctrl.ControlSystem(reglas)
         sim = ctrl.ControlSystemSimulation(sistema)
 
@@ -176,7 +177,7 @@ class ResultadoScreen(tk.Frame):
         sim.input['comida'] = comida
         sim.compute()
 
-        self.result_label.config(text=f"Propina sugerida: {sim.output['propina']:.4f}%")
+        self.result_label.config(text = f"Propina sugerida: {sim.output['propina']:.2f}%")
 
 if __name__ == "__main__":
     app = App()
