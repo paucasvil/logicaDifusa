@@ -55,26 +55,33 @@ class StarRating(tk.Frame):
 
         label = tk.Label(self, text = label_text, font = ('Arial', 18))
         canvas.create_window(250, 50, window = label)
+        start_x = 250 - ((5 - 1) * 60) / 2  
 
         for i in range(5):
-            star_label = tk.Label(self, text = '☆', font = ('Arial', 40))
-            star_label.bind('<Button-1>', lambda e, idx = i: self.set_rating(idx + 1))
-            canvas.create_window(100 + i * 60, 200, window = star_label)
-            self.stars.append(star_label)
+            x_pos = start_x + i * 60
+            star = canvas.create_text(x_pos, 200, text='☆', font=('Arial', 40), fill='#f1c40f', tags=f'star{i}')
+            canvas.tag_bind(f'star{i}', '<Button-1>', lambda e, idx=i: self.set_rating(idx + 1))
+            self.stars.append(star)  # Guarda el id del texto en el canvas
 
-            meaning = tk.Label(self, text = meanings[i], font = ('Arial', 10))
-            canvas.create_window(100 + i * 60, 250, window = meaning)
+            canvas.create_text(x_pos, 250, text=meanings[i], font=('Arial', 10, 'bold'), fill='white')
+
 
         self.next_btn = tk.Button(self, text = 'Aceptar', command = self.next_screen, state = 'disabled', 
                                   bg = '#e74c3c', fg = '#f7f7f7', font = ('Arial', 12, 'bold'), relief = 'raised', bd = 5, 
                                   padx = 10, pady = 5, borderwidth = 4, highlightbackground = '#ff4500')
         canvas.create_window(250, 350, window = self.next_btn)
 
+        self.canvas = tk.Canvas(self, width = 500, height = 500)
+        self.canvas.create_image(0, 0, image = self.bg_img, anchor = 'nw')
+        self.canvas.pack(fill = 'both', expand = True)
+
     def set_rating(self, rating):
-        self.rating = rating
-        for i, star_label in enumerate(self.stars):
-            star_label.config(text = '★' if i < rating else '☆', fg = '#f1c40f')
-        self.next_btn.config(state = 'normal')
+            self.rating = rating
+            for i, star_id in enumerate(self.stars):
+                new_text = '★' if i < rating else '☆'
+                self.children['!canvas'].itemconfig(star_id, text=new_text)
+            self.next_btn.config(state='normal')
+
 
     def next_screen(self):
         self.callback(self.rating)
@@ -86,6 +93,13 @@ class ComidaScreen(StarRating):
     def save_rating(self, rating):
         self.master.comida_rating = rating
         self.master.show_frame(ServicioScreen)
+    def reset_rating(self):
+        self.rating = 0
+        for star_id in self.stars:
+            self.canvas.itemconfig(star_id, text='☆')
+        self.canvas.update_idletasks()
+        self.next_btn.config(state='disabled')
+
 
 class ServicioScreen(StarRating):
     def __init__(self, parent):
@@ -94,6 +108,12 @@ class ServicioScreen(StarRating):
     def save_rating(self, rating):
         self.master.servicio_rating = rating
         self.master.show_frame(ResultadoScreen)
+    def reset_rating(self):
+        self.rating = 0
+        for star_id in self.stars:
+            self.canvas.itemconfig(star_id, text='☆')
+        self.canvas.update_idletasks()
+        self.next_btn.config(state='disabled')
 
 class ResultadoScreen(tk.Frame):
     def __init__(self, parent):
@@ -112,6 +132,20 @@ class ResultadoScreen(tk.Frame):
                         padx = 10, pady = 5, borderwidth = 4, highlightbackground = '#008000')
         canvas.create_window(250, 300, window = btn)
 
+        volver_btn = tk.Button(self, text='Volver a Calcular',
+                       command=self.volver_a_calcular,
+                       bg='#3498db', fg='white', font=('Arial', 12, 'bold'),
+                       relief='raised', bd=5, padx=10, pady=5,
+                       borderwidth=4, highlightbackground='#1e90ff')
+        canvas.create_window(250, 370, window=volver_btn)
+    def volver_a_calcular(self):
+        self.master.comida_rating = 0
+        self.master.servicio_rating = 0
+        self.master.frames[ComidaScreen].reset_rating()
+        self.master.frames[ServicioScreen].reset_rating()
+        self.master.show_frame(ComidaScreen)
+        self.result_label.config(text="")
+
     def calculate_tip(self):
         comida = self.master.comida_rating
         servicio = self.master.servicio_rating
@@ -121,22 +155,22 @@ class ResultadoScreen(tk.Frame):
         comida_var = ctrl.Antecedent(np.arange(1, 6, 1), 'comida')     
         propina = ctrl.Consequent(np.arange(0, 16, 1), 'propina')
 
-        servicio_var['pesimo'] = fuzz.trimf(servicio_var.universe, [1, 1, 2])
-        servicio_var['mediocre'] = fuzz.trimf(servicio_var.universe, [1, 2, 3])
-        servicio_var['regular'] = fuzz.trimf(servicio_var.universe, [2, 3, 4])
-        servicio_var['bueno'] = fuzz.trimf(servicio_var.universe, [3, 4, 5])
+        servicio_var['pesimo']    = fuzz.trimf(servicio_var.universe, [1, 1, 2])
+        servicio_var['mediocre']  = fuzz.trimf(servicio_var.universe, [1, 2, 3])
+        servicio_var['regular']   = fuzz.trimf(servicio_var.universe, [2, 3, 4])
+        servicio_var['bueno']     = fuzz.trimf(servicio_var.universe, [3, 4, 5])
         servicio_var['excelente'] = fuzz.trimf(servicio_var.universe, [4, 5, 5]) 
 
-        comida_var['pesimo'] = fuzz.trimf(comida_var.universe, [1, 1, 2])
-        comida_var['mediocre'] = fuzz.trimf(comida_var.universe, [1, 2, 3])
-        comida_var['regular'] = fuzz.trimf(comida_var.universe, [2, 3, 4])
-        comida_var['bueno'] = fuzz.trimf(comida_var.universe, [3, 4, 5])
-        comida_var['excelente'] = fuzz.trimf(comida_var.universe, [4, 5, 5])  
+        comida_var['pesimo']      = fuzz.trimf(comida_var.universe, [1, 1, 2])
+        comida_var['mediocre']    = fuzz.trimf(comida_var.universe, [1, 2, 3])
+        comida_var['regular']     = fuzz.trimf(comida_var.universe, [2, 3, 4])
+        comida_var['bueno']       = fuzz.trimf(comida_var.universe, [3, 4, 5])
+        comida_var['excelente']   = fuzz.trimf(comida_var.universe, [4, 5, 5])  
 
         propina['Ausente'] = fuzz.trimf(propina.universe, [0, 0, 5])
         propina['Regular'] = fuzz.trimf(propina.universe, [0, 5, 10])
         propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 15])  
-        propina['Generosa'] = fuzz.trapmf(propina.universe, [14, 15, 15, 15])  
+        propina['Generosa'] = fuzz.trimf(propina.universe, [14, 15, 15])  
 
         reglas = [
             ctrl.Rule(servicio_var['excelente'] & comida_var['excelente'], propina['Generosa']),
