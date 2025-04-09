@@ -1,9 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
 from PIL import Image, ImageTk
-import numpy as np
-import skfuzzy as fuzz
-from skfuzzy import control as ctrl
 
 class App(tk.Tk):
     def __init__(self):
@@ -150,68 +146,162 @@ class ResultadoScreen(tk.Frame):
         comida = self.master.comida_rating
         servicio = self.master.servicio_rating
 
-        # Lógica difusa
-        servicio_var = ctrl.Antecedent(np.arange(1, 6, 1), 'servicio') 
-        comida_var = ctrl.Antecedent(np.arange(1, 6, 1), 'comida')     
-        propina = ctrl.Consequent(np.arange(0, 16, 1), 'propina')
+        def triangular(x, a, b, c):
+            val = 0.0
+            if a < x and x < b:
+                val = (x - a) / (b - a)
+            if b <= x and x < c:
+                val = (c - x) / (c - b)
+            if x == b:
+                val = 1.0
+            return max(0.0, min(1.0, val))
 
-        servicio_var['pesimo']    = fuzz.trimf(servicio_var.universe, [1, 1, 2])
-        servicio_var['mediocre']  = fuzz.trimf(servicio_var.universe, [1, 2, 3])
-        servicio_var['regular']   = fuzz.trimf(servicio_var.universe, [2, 3, 4])
-        servicio_var['bueno']     = fuzz.trimf(servicio_var.universe, [3, 4, 5])
-        servicio_var['excelente'] = fuzz.trimf(servicio_var.universe, [4, 5, 5]) 
+        # Fuzzificación: calcular grados de pertenencia
+        comida_grados = {}
+        servicio_grados = {}
 
-        comida_var['pesimo']      = fuzz.trimf(comida_var.universe, [1, 1, 2])
-        comida_var['mediocre']    = fuzz.trimf(comida_var.universe, [1, 2, 3])
-        comida_var['regular']     = fuzz.trimf(comida_var.universe, [2, 3, 4])
-        comida_var['bueno']       = fuzz.trimf(comida_var.universe, [3, 4, 5])
-        comida_var['excelente']   = fuzz.trimf(comida_var.universe, [4, 5, 5])  
+        for nombre in ["pesimo", "mediocre", "regular", "bueno", "excelente"]:
+            comida_grados[nombre] = 0.0
+            servicio_grados[nombre] = 0.0
 
-        propina['Ausente'] = fuzz.trimf(propina.universe, [0, 0, 5])
-        propina['Regular'] = fuzz.trimf(propina.universe, [0, 5, 10])
-        propina['Adecuada'] = fuzz.trimf(propina.universe, [5, 10, 15])  
-        propina['Generosa'] = fuzz.trimf(propina.universe, [14, 15, 15])  
+        # Para comida
+        if True:
+            if comida >= 1 and comida <= 2:
+                comida_grados["pesimo"] = triangular(comida, 1, 1, 2)
+            if comida >= 1 and comida <= 3:
+                comida_grados["mediocre"] = triangular(comida, 1, 2, 3)
+            if comida >= 2 and comida <= 4:
+                comida_grados["regular"] = triangular(comida, 2, 3, 4)
+            if comida >= 3 and comida <= 5:
+                comida_grados["bueno"] = triangular(comida, 3, 4, 5)
+            if comida >= 4 and comida <= 5:
+                comida_grados["excelente"] = triangular(comida, 4, 5, 5)
 
-        reglas = [
-            ctrl.Rule(servicio_var['excelente'] & comida_var['excelente'], propina['Generosa']),
-            ctrl.Rule(servicio_var['excelente'] & comida_var['bueno'], propina['Generosa']),
-            ctrl.Rule(servicio_var['excelente'] & comida_var['regular'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['excelente'] & comida_var['mediocre'], propina['Regular']),
-            ctrl.Rule(servicio_var['excelente'] & comida_var['pesimo'], propina['Ausente']),
-            
-            ctrl.Rule(servicio_var['bueno'] & comida_var['excelente'], propina['Generosa']),
-            ctrl.Rule(servicio_var['bueno'] & comida_var['bueno'], propina['Generosa']),
-            ctrl.Rule(servicio_var['bueno'] & comida_var['regular'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['bueno'] & comida_var['mediocre'], propina['Regular']),
-            ctrl.Rule(servicio_var['bueno'] & comida_var['pesimo'], propina['Ausente']),
-            
-            ctrl.Rule(servicio_var['regular'] & comida_var['excelente'], propina['Generosa']),
-            ctrl.Rule(servicio_var['regular'] & comida_var['bueno'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['regular'] & comida_var['regular'], propina['Regular']),
-            ctrl.Rule(servicio_var['regular'] & comida_var['mediocre'], propina['Regular']),
-            ctrl.Rule(servicio_var['regular'] & comida_var['pesimo'], propina['Ausente']),
-            
-            ctrl.Rule(servicio_var['mediocre'] & comida_var['excelente'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['mediocre'] & comida_var['bueno'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['mediocre'] & comida_var['regular'], propina['Regular']),
-            ctrl.Rule(servicio_var['mediocre'] & comida_var['mediocre'], propina['Regular']),
-            ctrl.Rule(servicio_var['mediocre'] & comida_var['pesimo'], propina['Ausente']),
-            
-            ctrl.Rule(servicio_var['pesimo'] & comida_var['excelente'], propina['Adecuada']),
-            ctrl.Rule(servicio_var['pesimo'] & comida_var['bueno'], propina['Regular']),
-            ctrl.Rule(servicio_var['pesimo'] & comida_var['regular'], propina['Regular']),
-            ctrl.Rule(servicio_var['pesimo'] & comida_var['mediocre'], propina['Ausente']),
-            ctrl.Rule(servicio_var['pesimo'] & comida_var['pesimo'], propina['Ausente']),
-        ]
+        # Para servicio
+        if True:
+            if servicio >= 1 and servicio <= 2:
+                servicio_grados["pesimo"] = triangular(servicio, 1, 1, 2)
+            if servicio >= 1 and servicio <= 3:
+                servicio_grados["mediocre"] = triangular(servicio, 1, 2, 3)
+            if servicio >= 2 and servicio <= 4:
+                servicio_grados["regular"] = triangular(servicio, 2, 3, 4)
+            if servicio >= 3 and servicio <= 5:
+                servicio_grados["bueno"] = triangular(servicio, 3, 4, 5)
+            if servicio >= 4 and servicio <= 5:
+                servicio_grados["excelente"] = triangular(servicio, 4, 5, 5)
 
-        sistema = ctrl.ControlSystem(reglas)
-        sim = ctrl.ControlSystemSimulation(sistema)
+        # Base de reglas (manual con if)
+        salida_agregada = {
+            "ausente": 0.0,
+            "regular": 0.0,
+            "adecuada": 0.0,
+            "generosa": 0.0
+        }
 
-        sim.input['servicio'] = servicio
-        sim.input['comida'] = comida
-        sim.compute()
+        for s_key in servicio_grados:
+            for c_key in comida_grados:
+                grado = min(servicio_grados[s_key], comida_grados[c_key])
+                if s_key == "excelente" and c_key == "excelente":
+                    if salida_agregada["generosa"] < grado:
+                        salida_agregada["generosa"] = grado
+                if s_key == "excelente" and c_key == "bueno":
+                    if salida_agregada["generosa"] < grado:
+                        salida_agregada["generosa"] = grado
+                if s_key == "excelente" and c_key == "regular":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "excelente" and c_key == "mediocre":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "excelente" and c_key == "pesimo":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
+                if s_key == "bueno" and c_key == "excelente":
+                    if salida_agregada["generosa"] < grado:
+                        salida_agregada["generosa"] = grado
+                if s_key == "bueno" and c_key == "bueno":
+                    if salida_agregada["generosa"] < grado:
+                        salida_agregada["generosa"] = grado
+                if s_key == "bueno" and c_key == "regular":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "bueno" and c_key == "mediocre":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "bueno" and c_key == "pesimo":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
+                if s_key == "regular" and c_key == "excelente":
+                    if salida_agregada["generosa"] < grado:
+                        salida_agregada["generosa"] = grado
+                if s_key == "regular" and c_key == "bueno":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "regular" and c_key == "regular":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "regular" and c_key == "mediocre":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "regular" and c_key == "pesimo":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
+                if s_key == "mediocre" and c_key == "excelente":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "mediocre" and c_key == "bueno":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "mediocre" and c_key == "regular":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "mediocre" and c_key == "mediocre":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "mediocre" and c_key == "pesimo":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
+                if s_key == "pesimo" and c_key == "excelente":
+                    if salida_agregada["adecuada"] < grado:
+                        salida_agregada["adecuada"] = grado
+                if s_key == "pesimo" and c_key == "bueno":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "pesimo" and c_key == "regular":
+                    if salida_agregada["regular"] < grado:
+                        salida_agregada["regular"] = grado
+                if s_key == "pesimo" and c_key == "mediocre":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
+                if s_key == "pesimo" and c_key == "pesimo":
+                    if salida_agregada["ausente"] < grado:
+                        salida_agregada["ausente"] = grado
 
-        self.result_label.config(text = f"Propina sugerida: {sim.output['propina']:.2f}%")
+        # Defuzzificación manual (centroide)
+        resultado = 0.0
+        suma = 0.0
+        for x in range(0, 16):
+            μ = 0.0
+            val = triangular(x, 0, 0, 5)
+            if μ < min(salida_agregada["ausente"], val):
+                μ = min(salida_agregada["ausente"], val)
+            val = triangular(x, 0, 5, 10)
+            if μ < min(salida_agregada["regular"], val):
+                μ = min(salida_agregada["regular"], val)
+            val = triangular(x, 5, 10, 15)
+            if μ < min(salida_agregada["adecuada"], val):
+                μ = min(salida_agregada["adecuada"], val)
+            val = triangular(x, 14, 15, 15)
+            if μ < min(salida_agregada["generosa"], val):
+                μ = min(salida_agregada["generosa"], val)
+
+            resultado += x * μ
+            suma += μ
+
+        if suma > 0:
+            resultado = resultado / suma
+
+        self.result_label.config(text=f"Propina sugerida: {resultado:.2f}%")
 
 if __name__ == "__main__":
     app = App()
